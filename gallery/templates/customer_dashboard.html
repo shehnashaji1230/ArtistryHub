@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {%if request.user.is_authenticated%}
+    <h1>Welcome {{request.user}}</h1>
+    {%else%}
+    <h1>Customer Dashboard</h1>
+
+    {%endif%}
+    <a href="{%url 'logout'%}">Logout</a>
+    <a href="{%url 'profile-view'%}">Profile</a>
+</body>
+</html>
