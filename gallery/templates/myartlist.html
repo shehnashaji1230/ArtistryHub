@@ -31,10 +31,14 @@
               <p class="card-text">
                 {{work.description}}
               </p>
-             <p class="card-text fw-bold">
-                Price:   {{work.price}}
-              </p>
-              
+             
+              {% if work.get_discounted_price|floatformat:2 != work.price|floatformat:2 %}
+        <p class="card-text">Discount Price: Rs.{{work.get_discounted_price|floatformat:2}}</p>
+        {%else%}
+        <p class="card-text fw-bold">
+          Price:   {{work.price|floatformat:2}}
+        </p>
+        {%endif%}
               <p class="card-text">
                 Category: <small class="text-muted">{{work.category_object}}</small></p>
                 <p><small class="text-muted">{{work.created_date|date}}</small></p>

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block main %}
+<div class="container">
+    <h2>Review</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form }}
+        <button type="submit" class="btn btn-primary">Submit Review</button>
+    </form>
+    <a href="" class="btn btn-secondary mt-3">Cancel</a>
+    
+</div>
+
+
+{% endblock %}

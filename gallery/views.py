@@ -1,8 +1,8 @@
-from django.shortcuts import render,redirect
-from gallery.forms import RegisterForm,SignInForm,ProfileForm,CategoryForm,ArtWorkForm
+from django.shortcuts import render,redirect,get_object_or_404
+from gallery.forms import RegisterForm,SignInForm,ProfileForm,CategoryForm,ArtWorkForm,DiscountForm,ReviewForm
 from django.views.generic import View,FormView
 from django.contrib.auth import authenticate,login,logout
-from .models import UserProfile,Category,ArtWork
+from .models import UserProfile,Category,ArtWork,Review,WishList
 
 # Create your views here.
 class SignUpView(View):
@@ -46,13 +46,19 @@ class SignInView(FormView):
 class ArtistDashboardView(View):
     template_name='artist_dashboard.html'
     def get(self,request,*args,**kwargs):
-         qs=ArtWork.objects.all()
-         return render(request,self.template_name,{"arts":qs})
+        qs=ArtWork.objects.all()
+        return render(request,self.template_name,{"arts":qs})
 
 class CustomerDashboardView(View):
     template_name='customer_dashboard.html'
     def get(self,request,*args,**kwargs):
-        return render(request,self.template_name)
+         categories=Category.objects.all()
+         selected_category=request.GET.get('category')
+         if selected_category:
+             artworks=ArtWork.objects.filter(category_object=selected_category)
+         else:
+             artworks=ArtWork.objects.all()
+         return render(request,self.template_name,{'artworks':artworks,'categories':categories,'selected':selected_category})
 
 class SignOutView(View):
     def get(self,request,*args,**kwargs):
@@ -151,3 +157,74 @@ class MyArtWorkDeleteView(View):
         id=kwargs.get('pk')
         ArtWork.objects.get(id=id).delete()
         return redirect('artwork-list')
+
+class Add_DiscountView(View):
+    template_name='discount.html'
+    form_class=DiscountForm
+    def get(self,request,*args,**kwargs):
+        form_instance=self.form_class()
+        return render(request,self.template_name,{'form':form_instance})
+    
+    def post(self,request,*args,**kwargs):
+        form_instance=self.form_class(request.POST)
+        if form_instance.is_valid():
+            form_instance.save()
+            return redirect('artist-dashboard')
+        return render(request,self.template_name,{'form':form_instance})
+
+
+# customer functionality
+
+class ArtWorkDetailView(View):
+    template_name='artdetail.html'
+    
+    def get(self,request,*args,**kwargs):
+        id=kwargs.get('pk')
+        qs=ArtWork.objects.get(id=id)
+        reviews=Review.objects.filter(art_object=qs).order_by('-date_posted')
+        return render(request,self.template_name,{'artworks':qs,'review':reviews})
+
+class ReviewCreateView(View):
+    template_name='review.html'
+    form_class=ReviewForm
+    def get(self,request,*args,**kwargs):
+        
+        form=self.form_class()
+        return render(request,self.template_name,{'form':form})
+    def post(self,request,*args,**kwargs):
+        form=self.form_class(request.POST)
+        if form.is_valid():
+            form.instance.owner=request.user
+            form.save()
+            return redirect('customer-dashboard')
+        else:
+             return render(request,self.template_name,{'form':form})
+
+class AddToWishListView(View):
+    def get(self, request, art_id):
+        # Get the artwork object
+        artwork = get_object_or_404(ArtWork, id=art_id)
+        
+        # Get or create the user's wishlist
+        wishlist, created = WishList.objects.get_or_create(user=request.user)
+        
+        # Add the artwork to the wishlist if not already added
+        if artwork not in wishlist.art_object.all():
+            wishlist.art_object.add(artwork)
+        
+        # Redirect to the artwork detail page after adding
+        return redirect('art-detail', pk=art_id)
+
+class CustomerWishListView(View):
+    template_name='customer_wishlist.html'
+    def get(self,request,*args,**kwargs):
+
+        # fetch user's wishlist
+        wishlist=WishList.objects.filter(user=request.user).first()
+
+        # if user has wishlist retrieve artworks
+        if wishlist:
+            artworks=wishlist.art_object.all()
+        else:
+            artworks=[]
+        return render(request,self.template_name,{'artworks':artworks})

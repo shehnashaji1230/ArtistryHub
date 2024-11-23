@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
+from django.utils.timezone import now
 # Create your models here.
 
 class BaseModel(models.Model):
@@ -47,13 +48,28 @@ class ArtWork(BaseModel):
 
     def __str__(self) -> str:
         return self.title
+    
+    # fetch the first active discount that is valid
+    def get_active_discounts(self):
+        active_discount=self.discounts.filter(is_active=True,
+            start_date__lte=now().date(),
+            end_date__gte=now().date())
+        return active_discount.first()
+    
+    def get_discounted_price(self):
+        discount=self.get_active_discounts()
+        if discount:
+            return max(self.price-discount.discount_price,0)
+        return self.price
 
 class Discount(BaseModel):
-    art=models.ForeignKey(ArtWork,on_delete=models.CASCADE)
+    art=models.ForeignKey(ArtWork,on_delete=models.CASCADE,related_name='discounts')
     discount_price=models.DecimalField(max_digits=5,decimal_places=2)
     start_date=models.DateField()
     end_date=models.DateField()
     
+    def __str__(self) -> str:
+        return f"{self.discount_price}"
 
 class CartItems(BaseModel):
     owner=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)

@@ -1,18 +1,224 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    {%if request.user.is_authenticated%}
-    <h1>Welcome {{request.user}}</h1>
-    {%else%}
-    <h1>Customer Dashboard</h1>
+{%extends 'base.html'%}
 
-    {%endif%}
-    <a href="{%url 'logout'%}">Logout</a>
-    <a href="{%url 'profile-view'%}">Profile</a>
-</body>
-</html>
+{%block main%}
+
+{%if request.user.is_authenticated%}
+<h1>Welcome {{request.user}}</h1>
+{%else%}
+<h1>Customer Dashboard</h1>
+
+
+{%endif%}
+<!-- filter by category -->
+<div class="container">
+ <form action="{%url 'customer-dashboard'%}" onchange="this.form.submit()">
+    <label for="">Category:</label>
+    
+    {%for category in categories%}
+    <button 
+    name="category" 
+    value="{{category.id}}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}  
+    class="border rounded-pill" 
+    type="submit">{{category.category_type}}
+</button>
+    {%endfor%}
+    <button  
+    name="category" 
+    value=""  
+    class="border rounded-pill"  
+    type="submit">
+    All Categories
+</button>
+   
+ </form>
+</div>
+
+<section style="background-color: #eee;">
+    <div class="container py-5">
+      <div class="row">
+        {%for arts in artworks%}
+        <div class="col-md-12 col-lg-4 mb-4 mb-lg-0">
+          <div class="card text-black">
+            <img src="{{arts.picture.url}}"
+              class="card-img-top" alt="Art" />
+            <div class="card-body">
+              <div class="text-center mt-1">
+                <h4 class="card-title">{{arts.title}}</h4>
+                <h6 class="text-primary mb-1 pb-3">By{{arts.owner}}</h6>
+              </div>
+  
+              <div class="text-center">
+                <!-- <div class="p-3 mx-n3 mb-4" style="background-color: #eff1f2;">
+                  <h5 class="mb-0">Quick Look</h5>
+                </div>
+   -->
+                <div class="d-flex flex-column mb-4">
+                  <span class="h3 mb-0">Category:</span>
+                  <span>{{arts.category_object}}</span>
+                </div> 
+  
+                <!-- <div class="d-flex flex-column mb-4">
+                  <span class="h1 mb-0">
+                    <i class="fas fa-camera-retro"></i>
+                  </span>
+                  <ul class="list-unstyled mb-0">
+                    <li aria-hidden="true">—</li>
+                    <li>Wide</li>
+                    <li>Telephoto</li>
+                    <li aria-hidden="true">—</li>
+                  </ul>
+                </div> -->
+                {% if arts.get_discounted_price|floatformat:2 != arts.price|floatformat:2 %}
+
+  
+                <div class="d-flex flex-column mb-4">
+                  <span class="h3 mb-0">Discount Price:</span>
+                  <span>Rs.{{arts.get_discounted_price|floatformat:2}}</span>
+                </div>
+                {%else%}
+  
+                <div class="p-3 mx-n3 mb-4" style="background-color: #eff1f2;">
+                  <!-- <h5 class="mb-0">Capacity</h5> -->
+                  <span class="h3 mb-0"> Price:</span>
+                  <span>Rs.{{arts.price|floatformat:2}}</span>
+                </div>
+                {%endif%}
+  
+                <!-- <div class="d-flex flex-column mb-4 lead">
+                  <span class="mb-2">64GB</span>
+                  <span class="mb-2">256GB</span>
+                  <span style="color: transparent;">0</span>
+                </div> -->
+              </div>
+  
+              <div class="d-flex flex-row">
+                <a  href="{%url 'art-detail' arts.id%}" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary flex-fill me-1" data-mdb-ripple-color="dark">
+                  Learn more
+                </a>
+                <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-danger flex-fill ms-1">Buy now</button>
+                <a  href="{% url 'add_to_wishlist' art_id=arts.id %}" data-mdb-button-init data-mdb-ripple-init class="btn btn-danger flex-fill ms-1">Add to Wishlist</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {%endfor%}
+        <!-- <div class="col-md-6 col-lg-4 mb-4 mb-md-0">
+          <div class="card text-black">
+            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-product-cards/img2.webp"
+              class="card-img-top" alt="iPhone" />
+            <div class="card-body">
+              <div class="text-center mt-1">
+                <h4 class="card-title">iPhone 11</h4>
+                <h6 class="text-primary mb-1 pb-3">Starting at $499</h6>
+              </div>
+  
+              <div class="text-center">
+                <div class="p-3 mx-n3 mb-4" style="background-color: #eff1f2;">
+                  <h5 class="mb-0">Quick Look</h5>
+                </div>
+  
+                <div class="d-flex flex-column mb-4">
+                  <span class="h1 mb-0">6.1″</span>
+                  <span>Liquid Retina HD display1</span>
+                </div>
+  
+                <div class="d-flex flex-column mb-4">
+                  <span class="h1 mb-0">
+                    <i class="fas fa-camera-retro"></i>
+                  </span>
+                  <ul class="list-unstyled mb-0">
+                    <li aria-hidden="true">Ultra Wide</li>
+                    <li>Wide</li>
+                    <li aria-hidden="true">—</li>
+                    <li aria-hidden="true">—</li>
+                  </ul>
+                </div>
+  
+                <div class="d-flex flex-column mb-4">
+                  <span class="h1 mb-0">2x</span>
+                  <span>Optical zoom range</span>
+                </div>
+  
+                <div class="p-3 mx-n3 mb-4" style="background-color: #eff1f2;">
+                  <h5 class="mb-0">Capacity</h5>
+                </div>
+  
+                <div class="d-flex flex-column mb-4 lead">
+                  <span class="mb-2">64GB</span>
+                  <span class="mb-2">128GB</span>
+                  <span>256GB</span>
+                </div>
+              </div>
+  
+              <div class="d-flex flex-row">
+                <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary flex-fill me-1" data-mdb-ripple-color="dark">
+                  Learn more
+                </button>
+                <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-danger flex-fill ms-1">Buy now</button>
+              </div>
+            </div>
+          </div>
+        </div> -->
+        <!-- <div class="col-md-6 col-lg-4 mb-4 mb-md-0">
+          <div class="card text-black">
+            <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-product-cards/img3.webp"
+              class="card-img-top" alt="iPhone" />
+            <div class="card-body">
+              <div class="text-center mt-1">
+                <h4 class="card-title">iPhone 11 Pro</h4>
+                <h6 class="text-primary mb-1 pb-3">Starting at $599</h6>
+              </div>
+  
+              <div class="text-center">
+                <div class="p-3 mx-n3 mb-4" style="background-color: #eff1f2;">
+                  <h5 class="mb-0">Quick Look</h5>
+                </div>
+  
+                <div class="d-flex flex-column mb-4">
+                  <span class="h1 mb-0">5.8″</span>
+                  <span>Super Retina HD display1</span>
+                </div>
+  
+                <div class="d-flex flex-column mb-4">
+                  <span class="h1 mb-0">
+                    <i class="fas fa-camera-retro"></i>
+                  </span>
+                  <ul class="list-unstyled mb-0">
+                    <li aria-hidden="true">Ultra Wide</li>
+                    <li>Wide</li>
+                    <li>Telephoto</li>
+                    <li aria-hidden="true">—</li>
+                  </ul>
+                </div>
+  
+                <div class="d-flex flex-column mb-4">
+                  <span class="h1 mb-0">4x</span>
+                  <span>Optical zoom range</span>
+                </div>
+  
+                <div class="p-3 mx-n3 mb-4" style="background-color: #eff1f2;">
+                  <h5 class="mb-0">Capacity</h5>
+                </div>
+  
+                <div class="d-flex flex-column mb-4 lead">
+                  <span class="mb-2">64GB</span>
+                  <span class="mb-2">256GB</span>
+                  <span>512GB</span>
+                </div>
+              </div>
+  
+              <div class="d-flex flex-row">
+                <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary flex-fill me-1" data-mdb-ripple-color="dark">
+                  Learn more
+                </button>
+                <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-danger flex-fill ms-1">Buy now</button>
+              </div>
+            </div>
+          </div>
+        </div> -->
+
+      </div>
+    </div>
+  </section>
+
+{%endblock%}
